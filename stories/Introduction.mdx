@@ -1,0 +1,265 @@
+{/* stories/Introduction.mdx */}
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+<style>
+  {`
+  .ds-intro { max-width: 860px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+  .ds-intro h1 { font-size: 2rem; font-weight: 800; color: #111827; margin-bottom: 0.25rem; }
+  .ds-intro .subtitle { font-size: 1.05rem; color: #6b7280; margin-bottom: 2rem; }
+  .ds-intro h2 { font-size: 1.2rem; font-weight: 700; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4rem; margin: 2.5rem 0 1rem; }
+  .ds-intro h3 { font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 0.5rem; }
+  .ds-intro p, .ds-intro li { font-size: 0.9rem; color: #374151; line-height: 1.7; }
+  .ds-intro ul { padding-left: 1.4rem; }
+  .ds-intro table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+  .ds-intro th { background: #f3f4f6; text-align: left; padding: 8px 12px; font-weight: 600; color: #374151; }
+  .ds-intro td { padding: 8px 12px; border-top: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
+  .ds-intro .callout { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 1rem 0; font-size: 0.875rem; color: #1e40af; }
+  .ds-intro .callout strong { color: #1d4ed8; }
+  .ds-intro .badge { display: inline-block; background: #eef2ff; color: #6366f1; border-radius: 20px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; margin-right: 4px; }
+  .ds-intro .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.75rem 0; }
+  .ds-intro .section-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 1rem 0; }
+  .ds-intro .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+  .ds-intro .card h4 { font-size: 0.9rem; font-weight: 700; color: #111827; margin: 0 0 6px; }
+  .ds-intro .card p { font-size: 0.825rem; color: #6b7280; margin: 0; }
+  `}
+</style>
+
+<div class="ds-intro">
+
+# @platform/design-system
+
+<p class="subtitle">
+  A platform-team owned library of web components — framework-agnostic, Okta-ready, published to your private GitLab registry.
+</p>
+
+<div class="pill-row">
+  <span class="badge">Lit 3</span>
+  <span class="badge">Storybook 8</span>
+  <span class="badge">WCAG 2.1 AA</span>
+  <span class="badge">ESM</span>
+  <span class="badge">TypeScript</span>
+</div>
+
+---
+
+## What is this?
+
+<div class="section-grid">
+  <div class="card">
+    <h4>For app teams</h4>
+    <p>Install <code>@platform/design-system</code> from the GitLab registry and drop components into any framework — React, Vue, Angular, or plain HTML.</p>
+  </div>
+  <div class="card">
+    <h4>For platform engineers</h4>
+    <p>Add components here. Each lives in <code>src/components/&lt;name&gt;/</code>, is documented in Storybook, and is automatically tree-shakeable in the published package.</p>
+  </div>
+  <div class="card">
+    <h4>For designers</h4>
+    <p>Storybook is the source of truth for component behaviour, states, and accessibility. Every story runs live in the browser with real component code.</p>
+  </div>
+</div>
+
+---
+
+## Installing in an app
+
+### 1 — Point npm at the GitLab registry
+
+Add a `.npmrc` to the consuming project root:
+
+```ini
+@platform:registry=https://gitlab.yourcompany.com/api/v4/packages/npm/
+//gitlab.yourcompany.com/api/v4/packages/npm/:_authToken=${GITLAB_NPM_TOKEN}
+```
+
+Set `GITLAB_NPM_TOKEN` as an env var or CI/CD secret (use a GitLab Deploy Token with `read_package_registry` scope).
+
+### 2 — Install
+
+```bash
+npm install @platform/design-system
+```
+
+> **Lit is a peer dependency.** Install it once per app if not already present:
+> ```bash
+> npm install lit
+> ```
+
+---
+
+## Usage by framework
+
+### Plain HTML
+
+```html
+<script type="module">
+  import '@platform/design-system';
+</script>
+
+<ds-user-profile id="profile"></ds-user-profile>
+
+<script type="module">
+  const el = document.getElementById('profile');
+  el.user = await fetchOktaUser(userId);   // assign as a JS property
+</script>
+```
+
+### React (18)
+
+```jsx
+import '@platform/design-system/user-profile';
+
+function Header({ oktaUser }) {
+  return (
+    <ds-user-profile ref={(el) => { if (el) el.user = oktaUser; }} />
+  );
+}
+```
+
+> React 19+ supports Custom Elements natively. For React 18 set object properties via `ref`.
+
+### Vue 3
+
+```vue
+<script setup>
+import '@platform/design-system/user-profile';
+</script>
+
+<template>
+  <ds-user-profile :user="oktaUser" />
+</template>
+```
+
+### Angular
+
+```ts
+// app.module.ts
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+@NgModule({ schemas: [CUSTOM_ELEMENTS_SCHEMA] })
+export class AppModule {}
+```
+
+```html
+<!-- template -->
+<ds-user-profile [user]="oktaUser"></ds-user-profile>
+```
+
+---
+
+## Does my app need TypeScript?
+
+**No.** The package ships pre-compiled JavaScript. TypeScript was used to *author* the components but plays no role at runtime.
+
+| App type | What you get |
+|---|---|
+| **JavaScript app** | Components work as-is. No TypeScript config needed. |
+| **TypeScript app** | Full type definitions ship with the package. You get editor autocomplete for `OktaUser`, `OktaUserStatus`, etc. automatically. |
+
+```ts
+// TypeScript apps can import types directly:
+import type { OktaUser } from '@platform/design-system';
+```
+
+---
+
+## Full library or one component?
+
+You have two import styles. Both work with any bundler.
+
+### Import the whole library
+
+```js
+import '@platform/design-system';
+// or with a named export:
+import { UserProfile } from '@platform/design-system';
+```
+
+The package ships as **ES modules with one file per source module**. Modern bundlers (Vite, webpack 5, Rollup, esbuild) will automatically **tree-shake** anything you don't import — so only the components your app actually uses end up in your final bundle.
+
+### Import a single component directly
+
+```js
+import '@platform/design-system/user-profile';
+```
+
+Each component has its own sub-path export. This is the most explicit option and requires zero bundler intelligence — it's ideal for CDN usage or environments without a build step.
+
+<div class="callout">
+  <strong>Bottom line:</strong> for most apps the full-library import is simpler and the bundle difference is negligible. Use the sub-path import when you want to be explicit or skip a bundler entirely.
+</div>
+
+---
+
+## This Storybook site
+
+This site is the live design system documentation. It can be built as a static site and deployed anywhere (GitLab Pages, S3, Nginx):
+
+```bash
+npm run build:storybook   # outputs to storybook-static/
+```
+
+Every component in the library has its own story page showing:
+
+- **All visual states** — sizes, data variations, edge cases
+- **Interactive controls** — change props live in the browser
+- **Accessibility audit** — the Accessibility tab on every story runs axe-core (WCAG 2.1 AA) automatically and flags violations
+
+---
+
+## Accessibility
+
+Every component is built to **WCAG 2.1 Level AA**. The Storybook Accessibility panel (powered by [axe-core](https://github.com/dequelabs/axe-core)) runs on every story automatically — check the **Accessibility** tab in the panel below any story to see the audit results.
+
+Specifically enforced rules:
+
+| Rule | Why |
+|---|---|
+| `color-contrast` | 4.5:1 minimum for normal text, 3:1 for large text |
+| `button-name` | Every interactive element has an accessible name |
+| `image-alt` | Decorative images use `alt=""` (WCAG 1.1.1) |
+| `aria-*` validity | ARIA roles and attributes are used correctly |
+
+Keyboard behaviour is tested in stories via the browser's built-in focus management — components use native `<button>` elements so that Tab, Enter, Space, and Escape work without custom key handling.
+
+---
+
+## Theming
+
+Override CSS custom properties in your app's global stylesheet. No shadow DOM piercing required.
+
+```css
+:root {
+  --ds-font-family: 'Inter', sans-serif;
+  --ds-focus-color: #0052cc;   /* matches your brand focus ring */
+}
+```
+
+| Property | Default | Controls |
+|---|---|---|
+| `--ds-font-family` | system-ui | Font inside all components |
+| `--ds-focus-color` | `#6366f1` | Focus ring on interactive elements |
+
+---
+
+## Available components
+
+| Component | Tag | Story |
+|---|---|---|
+| User Profile | `<ds-user-profile>` | [View stories](?path=/docs/components-userprofile--docs) |
+
+More components will be added here as the design system grows.
+
+---
+
+## Contributing
+
+See the **Development** section of the [README](https://gitlab.yourcompany.com/platform/design-system/-/blob/main/README.md) for the full guide. The short version:
+
+1. Create `src/components/<name>/` with `.component.ts`, `.styles.ts`, and `index.ts`
+2. Export from `src/index.ts` and add a sub-path in `package.json`
+3. Write stories in `stories/<Name>.stories.ts` covering all states
+4. Run `npm run type-check` before opening a merge request
+
+</div>

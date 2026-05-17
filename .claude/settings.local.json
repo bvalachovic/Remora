@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\bvala\\\\Repos\\\\GitHub\\\\WebComponents\\\\src\\\\components\\\\user-profile\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\bvala\\\\Repos\\\\GitHub\\\\WebComponents\\\\src\\\\mocks\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\bvala\\\\Repos\\\\GitHub\\\\WebComponents\\\\.storybook\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\bvala\\\\Repos\\\\GitHub\\\\WebComponents\\\\stories\")"
+    ]
+  }
+}
