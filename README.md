@@ -362,22 +362,95 @@ Set `@platform:registry` in `.npmrc` at the repo root (committed):
 
 ---
 
-## Okta Integration
+## Providing User Data
 
-Components are currently wired to mock data that mirrors the real [Okta Users API](https://developer.okta.com/docs/api/openapi/okta-management/management/tag/User/) response shape. When your Okta tenant is ready, swap the mock for a real API call — the component interface does not change.
+`<ds-user-profile>` is data-source agnostic. Assign the `user` property from any store — the component renders whatever fields are present and gracefully omits the rest.
 
 ```ts
-// Before (mock)
-import { MOCK_OKTA_USERS } from '@platform/design-system/src/mocks/okta-service.mock';
-profileEl.user = MOCK_OKTA_USERS['jane.smith'];
-
-// After (real Okta)
-import { OktaAuth } from '@okta/okta-auth-js';
-
-const okta = new OktaAuth({ issuer: 'https://yourorg.okta.com' });
-const { sub } = await okta.getUser();
-const res = await fetch(`/api/v1/users/${sub}`, {
-  headers: { Authorization: `Bearer ${await okta.getAccessToken()}` },
-});
-profileEl.user = await res.json();
+import type { UserProfileData } from '@platform/design-system';
 ```
+
+### Django (server-rendered)
+
+Serialize the user in your view and pass it as a JSON context variable:
+
+```python
+# views.py
+def my_view(request):
+    u = request.user
+    context = {
+        'profile_user': {
+            'firstName': u.first_name,
+            'lastName':  u.last_name,
+            'email':     u.email,
+            'isActive':  u.is_active,
+            # Any extra fields stored from OIDC claims:
+            'department': getattr(u, 'department', None),
+            'title':      getattr(u, 'title', None),
+            'groups':     list(u.groups.values_list('name', flat=True)),
+        }
+    }
+    return render(request, 'template.html', context)
+```
+
+```html
+<!-- template.html -->
+<ds-user-profile id="profile"></ds-user-profile>
+<script type="module">
+  import '@platform/design-system';
+  document.getElementById('profile').user = {{ profile_user|json_script:""|slice:"1:-1" }};
+</script>
+```
+
+### Vue with Pinia
+
+```ts
+// stores/user.ts
+import { defineStore } from 'pinia';
+import type { UserProfileData } from '@platform/design-system';
+
+export const useUserStore = defineStore('user', {
+  state: (): { user: UserProfileData | null } => ({ user: null }),
+  actions: {
+    loadFromOidc(claims: Record<string, unknown>) {
+      this.user = {
+        firstName:  claims.given_name as string,
+        lastName:   claims.family_name as string,
+        email:      claims.email as string | undefined,
+        pictureUrl: claims.picture as string | undefined,
+        isActive:   true,
+        // Enrich with any custom claims your IdP includes:
+        department: claims['custom:department'] as string | undefined,
+        groups:     claims.groups as string[] | undefined,
+      };
+    },
+  },
+});
+```
+
+```vue
+<script setup>
+import '@platform/design-system';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/stores/user';
+
+const { user } = storeToRefs(useUserStore());
+</script>
+
+<template>
+  <ds-user-profile :user="user ?? undefined" />
+</template>
+```
+
+### OIDC claim mapping
+
+| `UserProfileData` field | Standard OIDC claim | Notes |
+| --- | --- | --- |
+| `firstName` | `given_name` | |
+| `lastName` | `family_name` | |
+| `email` | `email` | |
+| `pictureUrl` | `picture` | |
+| `department` | `custom:department` | IdP-specific custom claim |
+| `groups` | `groups` / `cognito:groups` | IdP-specific |
+| `isActive` | — | Server-side only; not in OIDC tokens |
+| `lastLogin` | — | From Django session or your IdP's audit log |

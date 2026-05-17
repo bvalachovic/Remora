@@ -3,18 +3,16 @@ import { html } from 'lit';
 
 // Side-effect import registers <ds-user-profile>
 import '../src/components/user-profile/user-profile.component.js';
-import type { OktaUser } from '../src/mocks/okta.types.js';
-import { MOCK_OKTA_USERS } from '../src/mocks/okta-service.mock.js';
+import type { UserProfileData } from '../src/types/user-profile.types.js';
+import { MOCK_USERS } from '../src/mocks/okta-service.mock.js';
 
 // ── Shared mock users ──────────────────────────────────────────────────────
-const JANE = MOCK_OKTA_USERS['jane.smith'] as OktaUser;
-const JOHN = MOCK_OKTA_USERS['john.doe'] as OktaUser;
-const MARIA = MOCK_OKTA_USERS['maria.garcia'] as OktaUser;
-const SUSPENDED = MOCK_OKTA_USERS['alex.suspended'] as OktaUser;
+const JANE = MOCK_USERS['jane.smith'] as UserProfileData;
+const JOHN = MOCK_USERS['john.doe'] as UserProfileData;
+const MARIA = MOCK_USERS['maria.garcia'] as UserProfileData;
+const INACTIVE = MOCK_USERS['alex.inactive'] as UserProfileData;
 
 // ── Shared a11y config ─────────────────────────────────────────────────────
-// Applied globally in preview.ts (WCAG 2.1 AA). Story-level overrides below
-// document intentional exceptions with clear justification.
 const A11Y_WCAG_AA = {
   config: {
     rules: [
@@ -37,7 +35,7 @@ const meta: Meta = {
   argTypes: {
     user: {
       control: 'object',
-      description: 'OktaUser object returned from `getOktaUser()` or a mock.',
+      description: 'User data from your app store (Django session, Pinia, etc.).',
     },
     avatarSize: {
       control: { type: 'radio' },
@@ -55,7 +53,9 @@ const meta: Meta = {
     docs: {
       description: {
         component: `
-A Lit web component (\`<ds-user-profile>\`) that displays a user avatar and, on click, reveals an identity popover sourced from Okta user data.
+A Lit web component (\`<ds-user-profile>\`) that displays a user avatar and, on click, reveals an identity popover.
+
+Populate the \`user\` property from your app's store — a Django session context variable, a Pinia store, or any other source. The component renders whatever fields are present and omits the rest.
 
 **Accessibility:** Targets WCAG 2.1 Level AA. The avatar is a \`<button>\` with \`aria-label\`, \`aria-expanded\`, and \`aria-haspopup="dialog"\`. The popover has \`role="dialog"\` with an \`aria-label\`. Escape closes the popover and returns focus to the trigger.
 
@@ -66,8 +66,8 @@ A Lit web component (\`<ds-user-profile>\`) that displays a user avatar and, on 
 </script>
 <ds-user-profile id="profile"></ds-user-profile>
 <script type="module">
-  const el = document.getElementById('profile');
-  el.user = await getOktaUser(currentUserId);
+  // Assign from your store — Django JSON, Pinia state, etc.
+  document.getElementById('profile').user = window.__USER__;
 </script>
 \`\`\`
         `,
@@ -100,18 +100,17 @@ export const DesignLead: Story = {
 };
 
 /**
- * Suspended account — amber status badge.
- * a11y: color-contrast rule is satisfied; amber (#d97706) on the light header
- * gradient meets the 4.5:1 ratio for normal-weight text at 11px bold.
+ * Inactive account — gray status badge.
+ * a11y: color-contrast rule is satisfied.
  */
-export const SuspendedUser: Story = {
-  name: 'Suspended Account',
-  args: { user: SUSPENDED, avatarSize: 'md' },
+export const InactiveUser: Story = {
+  name: 'Inactive Account',
+  args: { user: INACTIVE, avatarSize: 'md' },
   parameters: {
     a11y: A11Y_WCAG_AA,
     docs: {
       description: {
-        story: 'A suspended Okta account renders with an amber status indicator in the popover header.',
+        story: 'When `isActive` is `false`, a gray "Inactive" badge renders in the popover header.',
       },
     },
   },
@@ -135,23 +134,36 @@ export const SizeLarge: Story = {
   args: { user: JANE, avatarSize: 'lg' },
 };
 
-/** Profile image overrides initials when `profileImageUrl` is set. */
+/** Profile image overrides initials when `pictureUrl` is set. */
 export const WithProfileImage: Story = {
   name: 'With Profile Image',
   args: {
     user: {
       ...JANE,
-      profile: {
-        ...JANE.profile,
-        profileImageUrl: 'https://i.pravatar.cc/150?img=47',
-      },
+      pictureUrl: 'https://i.pravatar.cc/150?img=47',
     },
     avatarSize: 'md',
   },
   parameters: {
     docs: {
       description: {
-        story: 'When `profile.profileImageUrl` is set, the image renders instead of initials. The `<img>` has `alt=""` because the adjacent visible name already describes the user (decorative image pattern).',
+        story: 'When `pictureUrl` is set, the image renders instead of initials. The `<img>` has `alt=""` because the adjacent visible name already describes the user (decorative image pattern).',
+      },
+    },
+  },
+};
+
+/** No `isActive` provided — status dot is hidden entirely. */
+export const NoStatusDot: Story = {
+  name: 'No Status (isActive omitted)',
+  args: {
+    user: { ...JANE, isActive: undefined },
+    avatarSize: 'md',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'When `isActive` is not provided, the status dot and badge are omitted. Use this when your store does not expose account status.',
       },
     },
   },
@@ -187,14 +199,13 @@ export const NoUser: Story = {
       config: {
         rules: [
           { id: 'color-contrast', enabled: true },
-          // button-name is satisfied: avatar has aria-label="User profile"
           { id: 'button-name', enabled: true },
         ],
       },
     },
     docs: {
       description: {
-        story: 'When `user` has not been set yet, the avatar shows a "?" placeholder. Assign the `user` property once your Okta call resolves.',
+        story: 'When `user` has not been set yet, the avatar shows a "?" placeholder. Assign the property once your store resolves.',
       },
     },
   },

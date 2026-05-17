@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { OktaUser, OktaUserStatus } from '../../mocks/okta.types.js';
+import type { UserProfileData } from '../../types/user-profile.types.js';
 import { userProfileStyles } from './user-profile.styles.js';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
@@ -21,21 +21,6 @@ function avatarColor(name: string): string {
   return palette[hash % palette.length];
 }
 
-function isActiveStatus(status: OktaUserStatus): boolean {
-  return status === 'ACTIVE';
-}
-
-const STATUS_LABELS: Record<OktaUserStatus, string> = {
-  ACTIVE: 'Active',
-  DEPROVISIONED: 'Deprovisioned',
-  LOCKED_OUT: 'Locked Out',
-  PASSWORD_EXPIRED: 'Password Expired',
-  PROVISIONED: 'Provisioned',
-  RECOVERY: 'Recovery',
-  STAGED: 'Staged',
-  SUSPENDED: 'Suspended',
-};
-
 /**
  * `<ds-user-profile>` — avatar button that opens an identity popover.
  *
@@ -52,8 +37,8 @@ const STATUS_LABELS: Record<OktaUserStatus, string> = {
 export class UserProfile extends LitElement {
   static styles = userProfileStyles;
 
-  /** Okta user object. Provide this from `getOktaUser()` or a mock. */
-  @property({ type: Object }) user: OktaUser | undefined = undefined;
+  /** User data from your app's store (Django session, Pinia, etc.). */
+  @property({ type: Object }) user: UserProfileData | undefined = undefined;
 
   /** Avatar size: sm (32px) | md (40px, default) | lg (52px) */
   @property({ type: String, attribute: 'avatar-size' })
@@ -103,13 +88,12 @@ export class UserProfile extends LitElement {
 
   private get _initials(): string {
     if (!this.user) return '?';
-    const { firstName, lastName } = this.user.profile;
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    return `${this.user.firstName.charAt(0)}${this.user.lastName.charAt(0)}`.toUpperCase();
   }
 
   private get _color(): string {
     if (!this.user) return '#6366f1';
-    return avatarColor(this.user.profile.firstName + this.user.profile.lastName);
+    return avatarColor(this.user.firstName + this.user.lastName);
   }
 
   private _formatDate(iso?: string): string {
@@ -121,7 +105,7 @@ export class UserProfile extends LitElement {
   }
 
   private _renderAvatarImage() {
-    const src = this.user?.profile.profileImageUrl;
+    const src = this.user?.pictureUrl;
     return src
       ? html`<img src=${src} alt="" />`
       : html`<span class="initials">${this._initials}</span>`;
@@ -150,10 +134,22 @@ export class UserProfile extends LitElement {
     `;
   }
 
+  private _renderStatus() {
+    const { isActive } = this.user!;
+    if (isActive === undefined) return nothing;
+    return html`
+      <div class="popover__status status--${isActive ? 'active' : 'inactive'}">
+        <span class="popover__status-dot"></span>
+        ${isActive ? 'Active' : 'Inactive'}
+      </div>
+    `;
+  }
+
   private _renderPopover() {
     if (!this._open || !this.user) return nothing;
-    const { profile, status, lastLogin } = this.user;
-    const fullName = `${profile.firstName} ${profile.lastName}`;
+    const { firstName, lastName, title, email, department, organization, manager, phone, pictureUrl, lastLogin } =
+      this.user;
+    const fullName = `${firstName} ${lastName}`;
 
     return html`
       <div
@@ -165,20 +161,13 @@ export class UserProfile extends LitElement {
       >
         <div class="popover__header">
           <div class="popover__avatar" style="background-color: ${this._color}">
-            ${profile.profileImageUrl
-              ? html`<img src=${profile.profileImageUrl} alt="" />`
-              : this._initials}
+            ${pictureUrl ? html`<img src=${pictureUrl} alt="" />` : this._initials}
           </div>
 
           <div class="popover__identity">
             <div class="popover__name">${fullName}</div>
-            ${profile.title
-              ? html`<div class="popover__job-title">${profile.title}</div>`
-              : nothing}
-            <div class="popover__status status--${status}">
-              <span class="popover__status-dot"></span>
-              ${STATUS_LABELS[status] ?? status}
-            </div>
+            ${title ? html`<div class="popover__job-title">${title}</div>` : nothing}
+            ${this._renderStatus()}
           </div>
 
           <button
@@ -191,11 +180,11 @@ export class UserProfile extends LitElement {
         </div>
 
         <div class="popover__body">
-          ${this._renderAttr('Email', profile.email, 'email')}
-          ${this._renderAttr('Department', profile.department)}
-          ${this._renderAttr('Organization', profile.organization)}
-          ${this._renderAttr('Manager', profile.manager)}
-          ${this._renderAttr('Phone', profile.mobilePhone, 'phone')}
+          ${this._renderAttr('Email', email, 'email')}
+          ${this._renderAttr('Department', department)}
+          ${this._renderAttr('Organization', organization)}
+          ${this._renderAttr('Manager', manager)}
+          ${this._renderAttr('Phone', phone, 'phone')}
           <div class="popover__divider"></div>
           ${this._renderGroups()}
         </div>
@@ -211,7 +200,7 @@ export class UserProfile extends LitElement {
 
   render() {
     const label = this.user
-      ? `${this.user.profile.firstName} ${this.user.profile.lastName} — profile`
+      ? `${this.user.firstName} ${this.user.lastName} — profile`
       : 'User profile';
 
     return html`
@@ -225,11 +214,9 @@ export class UserProfile extends LitElement {
         aria-label=${label}
       >
         ${this._renderAvatarImage()}
-        <span
-          class="status-dot status-dot--${this.user && isActiveStatus(this.user.status)
-            ? 'active'
-            : 'inactive'}"
-        ></span>
+        ${this.user?.isActive !== undefined
+          ? html`<span class="status-dot status-dot--${this.user.isActive ? 'active' : 'inactive'}"></span>`
+          : nothing}
       </button>
       ${this._renderPopover()}
     `;

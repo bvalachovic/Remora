@@ -196,25 +196,17 @@ export const userProfileStyles = css`
     flex-shrink: 0;
   }
 
-  .status--ACTIVE .popover__status-dot {
+  .status--active .popover__status-dot {
     background: #10b981;
   }
-  .status--ACTIVE {
+  .status--active {
     color: #059669;
   }
-  .status--SUSPENDED .popover__status-dot,
-  .status--DEPROVISIONED .popover__status-dot {
-    background: #f59e0b;
+  .status--inactive .popover__status-dot {
+    background: #9ca3af;
   }
-  .status--SUSPENDED,
-  .status--DEPROVISIONED {
-    color: #d97706;
-  }
-  .status--LOCKED_OUT .popover__status-dot {
-    background: #ef4444;
-  }
-  .status--LOCKED_OUT {
-    color: #dc2626;
+  .status--inactive {
+    color: #6b7280;
   }
 
   .popover__close {
