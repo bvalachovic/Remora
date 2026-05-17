@@ -62,7 +62,7 @@ Populate the \`user\` property from your app's store — a Django session contex
 **Usage**
 \`\`\`html
 <script type="module">
-  import '@platform/design-system';
+  import 'remora';
 </script>
 <ds-user-profile id="profile"></ds-user-profile>
 <script type="module">

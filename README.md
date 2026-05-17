@@ -4,7 +4,7 @@
 
 
 
-## A @platform/design-system
+## Overview
 
 A platform-team owned component library of [Lit](https://lit.dev) web components, documented and developed in [Storybook](https://storybook.js.org). Components are framework-agnostic — they work in any app regardless of whether it uses React, Vue, Angular, or plain HTML.
 
@@ -28,10 +28,9 @@ A platform-team owned component library of [Lit](https://lit.dev) web components
 
 ### 1. Configure the GitLab npm registry
 
-App teams need to tell npm/yarn where to find `@platform`-scoped packages. Add a `.npmrc` file to the root of the consuming project:
+Point npm at the GitLab registry by adding a `.npmrc` file to the root of the consuming project:
 
 ```ini
-@platform:registry=https://gitlab.yourcompany.com/api/v4/packages/npm/
 //gitlab.yourcompany.com/api/v4/packages/npm/:_authToken=${GITLAB_NPM_TOKEN}
 ```
 
@@ -40,12 +39,12 @@ Set `GITLAB_NPM_TOKEN` as an environment variable or CI/CD secret — use a GitL
 ### 2. Install the package
 
 ```bash
-npm install @platform/design-system
+npm install remora
 ```
 
 > **Lit is a peer dependency.** If your app doesn't already use Lit, install it alongside:
 > ```bash
-> npm install @platform/design-system lit
+> npm install remora lit
 > ```
 > Lit is tiny (~6 KB gzipped) and has zero runtime dependencies.
 
@@ -59,36 +58,34 @@ Components are [Custom Elements](https://developer.mozilla.org/en-US/docs/Web/AP
 
 ```html
 <script type="module">
-  import '@platform/design-system';
+  import 'remora';
 </script>
 
 <ds-user-profile id="profile"></ds-user-profile>
 
 <script type="module">
-  import { getOktaUser } from './your-okta-service.js';
-
   const el = document.getElementById('profile');
-  el.user = await getOktaUser(currentUserId);
+  el.user = window.__USER__; // assign from your app's store or server-rendered JSON
 </script>
 ```
 
 ### Vite / webpack / modern bundlers
 
 ```js
-import { UserProfile } from '@platform/design-system';
+import { UserProfile } from 'remora';
 // UserProfile is now registered; use <ds-user-profile> anywhere in your HTML/templates.
 ```
 
 Or import the side-effect registration only (no named export needed):
 
 ```js
-import '@platform/design-system/user-profile';
+import 'remora/user-profile';
 ```
 
 ### React (18+)
 
 ```jsx
-import '@platform/design-system/user-profile';
+import 'remora/user-profile';
 
 function App({ oktaUser }) {
   return <ds-user-profile ref={(el) => { if (el) el.user = oktaUser; }} />;
@@ -101,7 +98,7 @@ function App({ oktaUser }) {
 
 ```vue
 <script setup>
-import '@platform/design-system/user-profile';
+import 'remora/user-profile';
 </script>
 
 <template>
@@ -130,9 +127,9 @@ export class AppModule {}
 
 ## Available Components
 
-| Element | Import path | Description |
-|---|---|---|
-| `<ds-user-profile>` | `@platform/design-system/user-profile` | Avatar + identity popover from Okta |
+| Element             | Import path           | Description               |
+| ------------------- | --------------------- | ------------------------- |
+| `<ds-user-profile>` | `remora/user-profile` | Avatar + identity popover |
 
 ### `<ds-user-profile>`
 
@@ -142,7 +139,7 @@ Displays a circular avatar. Clicking it opens a popover card with the user's ful
 
 | Property | Type | Default | Description |
 |---|---|---|---|
-| `user` | `OktaUser \| undefined` | `undefined` | Okta user object. Assign via JS property (not HTML attribute). |
+| `user` | `UserProfileData \| undefined` | `undefined` | User data from your store. Assign via JS property (not HTML attribute). |
 | `avatar-size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Avatar diameter: 32 / 40 / 52 px. |
 
 #### Events
@@ -180,11 +177,11 @@ ds-user-profile::part(popover) { width: 340px; }
 **No.** The package ships pre-compiled JavaScript. TypeScript was used to *author* the components but plays no role at runtime.
 
 - **JavaScript apps** — install and use the custom elements as shown above. No TypeScript needed.
-- **TypeScript apps** — full type definitions are included automatically. Your editor will provide autocomplete for `OktaUser`, `OktaUserStatus`, etc.
+- **TypeScript apps** — full type definitions are included automatically. Your editor will provide autocomplete for `UserProfileData` and component properties.
 
 ```ts
 // TypeScript consumers get full type safety:
-import type { OktaUser } from '@platform/design-system';
+import type { UserProfileData } from 'remora';
 ```
 
 ---
@@ -196,9 +193,9 @@ You have two options, depending on your bundler and use case.
 ### Option A — Import the whole library (recommended for most apps)
 
 ```js
-import '@platform/design-system';
+import 'remora';
 // or with named exports:
-import { UserProfile } from '@platform/design-system';
+import { UserProfile } from 'remora';
 ```
 
 The library ships as ES modules (`dist/index.js`). Modern bundlers (Vite, webpack 5, Rollup, esbuild) will **automatically tree-shake** any components you don't use, so only what you actually import ends up in your bundle. If you only import `UserProfile`, only that component is included.
@@ -208,14 +205,14 @@ The library ships as ES modules (`dist/index.js`). Modern bundlers (Vite, webpac
 Each component has its own sub-path export, giving bundlers the least possible work to do and making the dependency explicit:
 
 ```js
-import '@platform/design-system/user-profile';
+import 'remora/user-profile';
 ```
 
 Sub-path exports available:
 
-| Sub-path | Component |
-|---|---|
-| `@platform/design-system/user-profile` | `<ds-user-profile>` |
+| Sub-path              | Component           |
+| --------------------- | ------------------- |
+| `remora/user-profile` | `<ds-user-profile>` |
 
 > New components added to the library automatically get their own sub-path once they're exported from `src/index.ts` and the package is rebuilt.
 
@@ -318,7 +315,6 @@ Both steps must be run before publishing.
 2. Update `publishConfig.registry` in `package.json` with your actual GitLab instance URL.
 3. Authenticate locally:
    ```bash
-   npm config set @platform:registry https://gitlab.yourcompany.com/api/v4/packages/npm/
    npm config set //gitlab.yourcompany.com/api/v4/packages/npm/:_authToken <your-token>
    ```
 
@@ -353,10 +349,9 @@ publish:
     NPM_TOKEN: $CI_JOB_TOKEN
 ```
 
-Set `@platform:registry` in `.npmrc` at the repo root (committed):
+Add an `.npmrc` at the repo root (committed) to authenticate CI:
 
 ```ini
-@platform:registry=${CI_API_V4_URL}/packages/npm/
 //${CI_SERVER_HOST}/api/v4/packages/npm/:_authToken=${CI_JOB_TOKEN}
 ```
 
@@ -367,7 +362,7 @@ Set `@platform:registry` in `.npmrc` at the repo root (committed):
 `<ds-user-profile>` is data-source agnostic. Assign the `user` property from any store — the component renders whatever fields are present and gracefully omits the rest.
 
 ```ts
-import type { UserProfileData } from '@platform/design-system';
+import type { UserProfileData } from 'remora';
 ```
 
 ### Django (server-rendered)
@@ -397,7 +392,7 @@ def my_view(request):
 <!-- template.html -->
 <ds-user-profile id="profile"></ds-user-profile>
 <script type="module">
-  import '@platform/design-system';
+  import 'remora';
   document.getElementById('profile').user = {{ profile_user|json_script:""|slice:"1:-1" }};
 </script>
 ```
@@ -407,7 +402,7 @@ def my_view(request):
 ```ts
 // stores/user.ts
 import { defineStore } from 'pinia';
-import type { UserProfileData } from '@platform/design-system';
+import type { UserProfileData } from 'remora';
 
 export const useUserStore = defineStore('user', {
   state: (): { user: UserProfileData | null } => ({ user: null }),
@@ -430,7 +425,7 @@ export const useUserStore = defineStore('user', {
 
 ```vue
 <script setup>
-import '@platform/design-system';
+import 'remora';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/stores/user';
 

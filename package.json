@@ -1,5 +1,5 @@
 {
-  "name": "@platform/design-system",
+  "name": "remora",
   "version": "0.1.0",
   "description": "Platform team design system — Lit web components",
   "type": "module",
