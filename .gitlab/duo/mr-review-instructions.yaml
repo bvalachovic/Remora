@@ -1,0 +1,70 @@
+instructions:
+  - name: Lit Components
+    fileFilters:
+      - "src/components/**/*.component.ts"
+    instructions: |
+      Review Lit component files with these standards:
+      1. Class must extend LitElement and use @customElement with a ds- prefixed tag name
+      2. All public properties must use @property decorator with correct type hint
+      3. Private reactive state must use @state decorator
+      4. Styles must be in a separate *.styles.ts file, not inline
+      5. No direct DOM queries outside of shadowRoot — always scope to this.shadowRoot
+      6. Event listeners added in connectedCallback must be removed in disconnectedCallback
+      7. Custom events must bubble:true and composed:true so they cross shadow DOM boundaries
+      8. render() should delegate to private _renderXxx() helpers if it grows complex
+      9. No Okta-specific types — use UserProfileData from src/types/user-profile.types.ts
+      10. Progressive enhancement: optional UserProfileData fields must be handled gracefully with nothing
+
+  - name: Component Styles
+    fileFilters:
+      - "src/components/**/*.styles.ts"
+    instructions: |
+      Review Lit style files with these standards:
+      1. All overridable values must use CSS custom properties with --ds- prefix
+      2. No hardcoded colors that should be themeable
+      3. Focus styles must use var(--ds-focus-color, #6366f1) with a visible outline
+      4. Ensure sufficient color contrast (WCAG AA — 4.5:1 for normal text, 3:1 for large)
+      5. Use ::part() selectors for structural overrides that consumers may need
+
+  - name: TypeScript Types
+    fileFilters:
+      - "src/types/**/*.ts"
+    instructions: |
+      Review type definition files:
+      1. All fields that may be absent from a store must be optional (?)
+      2. No Okta-specific or IdP-specific field names — keep types generic
+      3. JSDoc comments on non-obvious fields explaining their source (OIDC claim, Django field, etc.)
+      4. Exported types must be re-exported from src/index.ts
+
+  - name: Storybook Stories
+    fileFilters:
+      - "stories/**/*.stories.ts"
+    instructions: |
+      Review Storybook story files:
+      1. Every significant prop variant must have its own named story
+      2. Edge cases must be covered: no user (loading state), missing optional fields, inactive status
+      3. a11y parameters must be set; intentional exceptions need a comment justifying them
+      4. Mock data must use MOCK_USERS from src/mocks/okta-service.mock.ts — no inline fabricated data
+      5. Story descriptions must not reference Okta or internal implementation details
+
+  - name: All TypeScript
+    fileFilters:
+      - "**/*.ts"
+      - "!**/*.stories.ts"
+      - "!node_modules/**"
+    instructions: |
+      Apply these rules to all TypeScript files:
+      1. No use of `any` — use unknown and narrow, or a specific type
+      2. No unused imports, variables, or parameters (enforced by tsconfig noUnusedLocals)
+      3. No backwards-compatibility shims or re-exports for removed code
+      4. Imports from src/ must use the .js extension (ESM + bundler moduleResolution convention)
+
+  - name: Package Configuration
+    fileFilters:
+      - "package.json"
+      - "tsconfig.json"
+      - "vite.config.*"
+    instructions: |
+      1. Peer dependencies (lit) must not be duplicated as regular dependencies
+      2. New components must have a sub-path export added under "exports" in package.json
+      3. Do not change experimentalDecorators or useDefineForClassFields — Lit requires these settings
