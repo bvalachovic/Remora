@@ -2,8 +2,6 @@
 
 ![Remora](assets/images/remoraLogo.png)
 
-
-
 ## Overview
 
 A platform-team owned component library of [Lit](https://lit.dev) web components, documented and developed in [Storybook](https://storybook.js.org). Components are framework-agnostic — they work in any app regardless of whether it uses React, Vue, Angular, or plain HTML.
